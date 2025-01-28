@@ -1,27 +1,19 @@
 {
-  "name": "social-tipping",
+  "name": "bounty",
   "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "frontend"
-  ],
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "compile": "hardhat compile",
-    "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.ts --network sepolia",
-    "dev": "cd frontend && npm run dev"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@types/node": "^20.10.5",
-    "hardhat": "^2.19.3",
-    "typescript": "^5.3.3"
+    "hardhat": "^2.19.4"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1",
-    "dotenv": "^16.3.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "@openzeppelin/contracts": "^4.9.0"
   }
 }

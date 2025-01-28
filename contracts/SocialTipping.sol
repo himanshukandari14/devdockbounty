@@ -1,56 +1,68 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract SocialTipping is ReentrancyGuard {
-    IERC20 public token;
-    
+    // Struct to store creator information
     struct Creator {
-        address creatorAddress;
+        address payable walletAddress;
+        string name;
+        string description;
         uint256 totalTips;
         bool isRegistered;
     }
-    
+
+    // Mapping from creator address to Creator struct
     mapping(address => Creator) public creators;
-    address[] public creatorList;
-    
-    event CreatorRegistered(address indexed creator);
+    // Array to store all creator addresses
+    address[] public creatorAddresses;
+
+    // Events
+    event CreatorRegistered(address indexed creator, string name);
     event TipSent(address indexed from, address indexed to, uint256 amount);
-    
-    constructor(address _token) {
-        token = IERC20(_token);
-    }
-    
-    function registerCreator() external {
-        require(!creators[msg.sender].isRegistered, "Already registered");
+
+    // Register as a content creator
+    function registerCreator(string memory _name, string memory _description) external {
+        require(!creators[msg.sender].isRegistered, "Creator already registered");
         
         creators[msg.sender] = Creator({
-            creatorAddress: msg.sender,
+            walletAddress: payable(msg.sender),
+            name: _name,
+            description: _description,
             totalTips: 0,
             isRegistered: true
         });
         
-        creatorList.push(msg.sender);
-        emit CreatorRegistered(msg.sender);
+        creatorAddresses.push(msg.sender);
+        emit CreatorRegistered(msg.sender, _name);
     }
-    
-    function tipCreator(address _creator, uint256 _amount) external nonReentrant {
+
+    // Send tip to a creator in ETH
+    function tipCreator(address _creator) external payable nonReentrant {
         require(creators[_creator].isRegistered, "Creator not registered");
-        require(_amount > 0, "Amount must be greater than 0");
+        require(msg.value > 0, "Tip amount must be greater than 0");
+
+        creators[_creator].totalTips += msg.value;
+        creators[_creator].walletAddress.transfer(msg.value);
         
-        require(token.transferFrom(msg.sender, _creator, _amount), "Transfer failed");
-        creators[_creator].totalTips += _amount;
+        emit TipSent(msg.sender, _creator, msg.value);
+    }
+
+    // Get all creators
+    function getAllCreators() external view returns (Creator[] memory) {
+        Creator[] memory allCreators = new Creator[](creatorAddresses.length);
         
-        emit TipSent(msg.sender, _creator, _amount);
+        for (uint i = 0; i < creatorAddresses.length; i++) {
+            allCreators[i] = creators[creatorAddresses[i]];
+        }
+        
+        return allCreators;
     }
-    
-    function getCreatorTips(address _creator) external view returns (uint256) {
-        return creators[_creator].totalTips;
+
+    // Get creator details
+    function getCreator(address _creator) external view returns (Creator memory) {
+        return creators[_creator];
     }
-    
-    function getAllCreators() external view returns (address[] memory) {
-        return creatorList;
-    }
-}
+} 
