@@ -315,6 +315,81 @@ export default function History({ contract, account }) {
     </div>
   );
 
+  // Function to generate random NFT-style avatar
+  const getRandomAvatar = (address) => {
+    const styles = [
+      'pixel-art',
+      'adventurer',
+      'avataaars',
+      'big-ears',
+      'croodles',
+      'shapes'
+    ];
+    
+    const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+    return `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${address}&backgroundColor=transparent`;
+  };
+
+  // Function to generate random gradient background
+  const getRandomGradient = () => {
+    const colors = [
+      ['#ff6b6b', '#4ecdc4'],
+      ['#a8e6cf', '#dcedc1'],
+      ['#ffd3b6', '#ffaaa5'],
+      ['#ff9a9e', '#fad0c4'],
+      ['#a18cd1', '#fbc2eb'],
+      ['#84fab0', '#8fd3f4']
+    ];
+    const randomPair = colors[Math.floor(Math.random() * colors.length)];
+    return `linear-gradient(135deg, ${randomPair[0]}, ${randomPair[1]})`;
+  };
+
+  // NFT Card Component
+  const NFTAvatar = ({ address }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+      <motion.div
+        className="relative group"
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
+        whileHover={{ scale: 1.05 }}
+      >
+        <div 
+          className="w-12 h-12 rounded-full overflow-hidden relative"
+          style={{ background: getRandomGradient() }}
+        >
+          <img
+            src={getRandomAvatar(address)}
+            alt="Creator Avatar"
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Glow Effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
+
+        {/* Hover Card */}
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+          >
+            <div className="bg-black/90 backdrop-blur-xl rounded-lg p-3 shadow-xl border border-white/10">
+              <div className="text-xs text-center">
+                <p className="text-purple-400 font-bold">Creator</p>
+                <p className="text-gray-400 font-mono">
+                  {`${address.slice(0, 6)}...${address.slice(-4)}`}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+    );
+  };
+
   if (!contract) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -402,44 +477,51 @@ export default function History({ contract, account }) {
               className="relative group"
             >
               <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-400">From</span>
-                      <span className="text-sm font-mono bg-red-500/10 text-red-500 px-2 py-1 rounded border border-red-500/20">
-                        {formatAddress(tip.from)}
-                      </span>
-                      <span className="text-sm text-gray-400">to</span>
-                      <span className="text-sm font-mono bg-green-500/10 text-green-500 px-2 py-1 rounded border border-green-500/20">
-                        {formatAddress(tip.to)}
-                      </span>
+                <div className="flex items-center gap-4">
+                  {/* Add NFT Avatar */}
+                  <NFTAvatar address={tip.to} />
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm text-gray-400">From</span>
+                          <span className="text-sm font-mono bg-red-500/10 text-red-500 px-2 py-1 rounded border border-red-500/20">
+                            {tip.from.slice(0, 6)}...{tip.from.slice(-4)}
+                          </span>
+                          <span className="text-sm text-gray-400">to</span>
+                          <span className="text-sm font-mono bg-green-500/10 text-green-500 px-2 py-1 rounded border border-green-500/20">
+                            {tip.to.slice(0, 6)}...{tip.to.slice(-4)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-400">Amount:</span>
+                          <span className="text-sm font-medium text-white">
+                            {tip.amount} ETH
+                          </span>
+                          <span className="text-sm text-gray-400">
+                            {new Date(tip.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {tip.tags?.map(tag => (
+                          <span
+                            key={tag}
+                            className="px-2 py-1 rounded-full text-xs bg-purple-600/20 text-purple-400 border border-purple-500/20"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-400">Amount:</span>
-                      <span className="text-sm font-medium text-white">
-                        {tip.amount} ETH
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {/* Display matched tags */}
-                    {tags.filter(tag => 
-                      tip.description?.toLowerCase().includes(tag.toLowerCase())
-                    ).map(tag => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 rounded-full text-xs bg-purple-600/20 text-purple-400 border border-purple-500/20"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                    {tip.description && (
+                      <p className="mt-2 text-sm text-gray-400">
+                        {tip.description}
+                      </p>
+                    )}
                   </div>
                 </div>
-                {tip.description && (
-                  <div className="mt-2 text-sm text-gray-400">
-                    {tip.description}
-                  </div>
-                )}
               </div>
             </motion.div>
           ))}
