@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
-export default function History({ contract }) {
+export default function History({ contract, account }) {
   const [tips, setTips] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [totalTips, setTotalTips] = useState("0");
@@ -14,6 +14,11 @@ export default function History({ contract }) {
   });
   const [chartData, setChartData] = useState([]);
   const [timeFrame, setTimeFrame] = useState('weekly'); // 'daily', 'weekly', 'monthly'
+
+  // Predefined tags
+  const [tags] = useState(['Music', 'YouTube', 'Development']);
+  const [selectedTag, setSelectedTag] = useState('all');
+  const [tagStats, setTagStats] = useState({});
 
   useEffect(() => {
     const loadTipHistory = async () => {
@@ -107,6 +112,41 @@ export default function History({ contract }) {
 
     processChartData();
   }, [tips, timeFrame]);
+
+  // Process tips and extract tags from descriptions
+  useEffect(() => {
+    if (!tips.length) return;
+
+    const processedStats = {};
+    tags.forEach(tag => {
+      processedStats[tag] = {
+        totalAmount: 0,
+        count: 0,
+        transactions: []
+      };
+    });
+
+    tips.forEach(tip => {
+      // Convert description to lowercase for case-insensitive matching
+      const description = tip.description?.toLowerCase() || '';
+      
+      // Check which tags are mentioned in the description
+      tags.forEach(tag => {
+        if (description.includes(tag.toLowerCase())) {
+          processedStats[tag].totalAmount += parseFloat(tip.amount);
+          processedStats[tag].count += 1;
+          processedStats[tag].transactions.push(tip);
+        }
+      });
+    });
+
+    setTagStats(processedStats);
+  }, [tips, tags]);
+
+  // Filter tips based on selected tag
+  const filteredTips = selectedTag === 'all' 
+    ? tips 
+    : tagStats[selectedTag]?.transactions || [];
 
   const formatAddress = (address) => `${address.slice(0, 6)}...${address.slice(-4)}`;
   
@@ -219,6 +259,62 @@ export default function History({ contract }) {
     </motion.div>
   );
 
+  // Tag Statistics Component
+  const TagStatistics = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      {tags.map(tag => {
+        const stats = tagStats[tag] || { totalAmount: 0, count: 0 };
+        return (
+          <motion.div
+            key={tag}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-black/40 backdrop-blur-xl rounded-xl p-4 border border-white/10"
+          >
+            <h3 className="text-lg font-bold text-white mb-2">{tag}</h3>
+            <div className="space-y-1">
+              <p className="text-sm text-gray-400">
+                Total: {stats.totalAmount.toFixed(4)} ETH
+              </p>
+              <p className="text-sm text-gray-400">
+                Transactions: {stats.count}
+              </p>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+
+  // Tag Filter Component
+  const TagFilter = () => (
+    <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
+      <button
+        onClick={() => setSelectedTag('all')}
+        className={`px-3 py-1 rounded-lg text-sm whitespace-nowrap transition-all ${
+          selectedTag === 'all'
+            ? 'bg-purple-600 text-white'
+            : 'bg-black/40 text-gray-400 hover:bg-black/60'
+        }`}
+      >
+        All Transactions
+      </button>
+      {tags.map(tag => (
+        <button
+          key={tag}
+          onClick={() => setSelectedTag(tag)}
+          className={`px-3 py-1 rounded-lg text-sm whitespace-nowrap transition-all ${
+            selectedTag === tag
+              ? 'bg-purple-600 text-white'
+              : 'bg-black/40 text-gray-400 hover:bg-black/60'
+          }`}
+        >
+          {tag} ({tagStats[tag]?.count || 0})
+        </button>
+      ))}
+    </div>
+  );
+
   if (!contract) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -243,6 +339,12 @@ export default function History({ contract }) {
       >
         Transaction History
       </motion.h2>
+
+      {/* Tag Statistics */}
+      <TagStatistics />
+
+      {/* Tag Filter */}
+      <TagFilter />
 
       {/* Add Chart Section */}
       <ChartSection />
@@ -278,21 +380,20 @@ export default function History({ contract }) {
         />
       </div>
 
-      {/* Transactions List */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 rounded-full border-t-2 border-purple-500 animate-spin" />
-            <div className="absolute inset-2 rounded-full border-t-2 border-pink-500 animate-spin-slow" />
-          </div>
-        </div>
-      ) : tips.length === 0 ? (
-        <div className="text-center py-20 bg-black/40 backdrop-blur-xl rounded-xl border border-white/10">
-          <p className="text-gray-400">No tips have been sent yet</p>
-        </div>
+      {/* Transaction List */}
+      {filteredTips.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-20 bg-black/40 backdrop-blur-xl rounded-xl border border-white/10"
+        >
+          <p className="text-gray-400 text-lg">
+            No transactions found for {selectedTag === 'all' ? 'any tag' : `tag "${selectedTag}"`}
+          </p>
+        </motion.div>
       ) : (
         <div className="space-y-4">
-          {tips.map((tip, index) => (
+          {filteredTips.map((tip, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -300,7 +401,6 @@ export default function History({ contract }) {
               transition={{ delay: index * 0.1 }}
               className="relative group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-black/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300" />
               <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
@@ -321,10 +421,25 @@ export default function History({ contract }) {
                       </span>
                     </div>
                   </div>
-                  <span className="text-sm text-gray-400">
-                    {formatTimestamp(tip.timestamp)}
-                  </span>
+                  <div className="flex gap-2">
+                    {/* Display matched tags */}
+                    {tags.filter(tag => 
+                      tip.description?.toLowerCase().includes(tag.toLowerCase())
+                    ).map(tag => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 rounded-full text-xs bg-purple-600/20 text-purple-400 border border-purple-500/20"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
+                {tip.description && (
+                  <div className="mt-2 text-sm text-gray-400">
+                    {tip.description}
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
