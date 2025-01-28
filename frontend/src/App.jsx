@@ -19,6 +19,29 @@ function App() {
   const [showExtensionPromo, setShowExtensionPromo] = useState(true)
   const [activeTab, setActiveTab] = useState('main')
   const [isConnecting, setIsConnecting] = useState(false)
+  const [theme, setTheme] = useState('dark')
+  const [viewMode, setViewMode] = useState('list')
+  const [isCompact, setIsCompact] = useState(false)
+
+  const themes = {
+    dark: {
+      bg: 'bg-black',
+      text: 'text-white',
+      border: 'border-white/10',
+      card: 'bg-black/40',
+      accent: 'text-green-400',
+      hover: 'hover:border-white/20'
+    },
+   
+    cyber: {
+      bg: 'bg-slate-900',
+      text: 'text-cyan-400',
+      border: 'border-cyan-500/20',
+      card: 'bg-slate-800/40',
+      accent: 'text-cyan-400',
+      hover: 'hover:border-cyan-500/40'
+    }
+  }
 
   const connectWallet = async () => {
     try {
@@ -659,8 +682,58 @@ function App() {
     </div>
   );
 
+  // UI Controls Component
+  const UIControls = () => (
+    <div className="flex items-center justify-between mb-6 bg-black/20 p-4 rounded-lg border border-white/10">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-400">Theme:</span>
+        <select
+          value={theme}
+          onChange={(e) => setTheme(e.target.value)}
+          className="bg-black/40 border border-white/10 rounded-lg px-3 py-1 text-sm text-white"
+        >
+          <option value="dark">Dark</option>
+        
+          <option value="cyber">Cyber</option>
+        </select>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+          className={`p-2 rounded-lg transition-all ${themes[theme].border} ${themes[theme].hover}`}
+        >
+          {viewMode === 'list' ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          )}
+        </button>
+
+        <button
+          onClick={() => setIsCompact(!isCompact)}
+          className={`p-2 rounded-lg transition-all ${themes[theme].border} ${themes[theme].hover}`}
+        >
+          {isCompact ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8v.01M4 12v.01M4 16v.01M8 8h12M8 12h12M8 16h12" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#0a0a0a] to-[#000000] text-white">
+    <div className={`min-h-screen ${themes[theme].bg} ${themes[theme].text} transition-colors duration-300`}>
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,24,0.2),rgba(0,0,0,0.9))]" />
@@ -668,7 +741,7 @@ function App() {
       </div>
 
       {/* Header */}
-      <header className="backdrop-blur-sm border-b border-white/10 sticky top-0 z-40">
+      <header className={`backdrop-blur-sm ${themes[theme].border} sticky top-0 z-40`}>
         <div className="max-w-6xl mx-auto p-6">
           <div className="flex justify-between items-center">
             <motion.div
@@ -710,6 +783,7 @@ function App() {
               </span>
             </motion.button>
           </div>
+          <UIControls />
         </div>
       </header>
 
@@ -877,7 +951,13 @@ function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <History contract={contract} />
+            <History 
+              contract={contract} 
+              account={account}
+              theme={themes[theme]}
+              viewMode={viewMode}
+              isCompact={isCompact}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -886,7 +966,7 @@ function App() {
       <DocModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
 
       {/* Footer */}
-      <footer className="border-t border-white/10 mt-20">
+      <footer className={`${themes[theme].border} mt-20`}>
         <div className="max-w-6xl mx-auto py-12 px-6">
           <div className="text-center space-y-4">
             <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
