@@ -11,8 +11,11 @@
 - 💰 **ETH Tipping**: Send direct cryptocurrency tips
 - 📊 **Real-time Updates**: Instant transaction confirmations
 - 📈 **Creator Analytics**: Track earnings and supporter engagement
+- 📝 **History Tracking**: Keep a record of all past transactions
 - 🏆 **Leaderboard System**: Showcase top creators and supporters
 - 📱 **Responsive Design**: Seamless experience across all devices
+- 📊 **Tip Tracking**: Visualize tips with graphs and statistics, filtered by tags and other parameters
+
 
 ## 🛠 Technical Stack
 
@@ -59,7 +62,7 @@
 
    Terminal 2 - Deploy to local network:
    ```bash
-  npx hardhat run scripts/deploy-social-tipping.js --network localhost
+    npx hardhat run scripts/deploy-social-tipping.js --network localhost
    ```
 
    Terminal 3 - Launch Vite dev server:
