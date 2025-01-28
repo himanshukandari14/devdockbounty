@@ -310,17 +310,19 @@ function App() {
   }, [contract])
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[#000000] text-white">
       {/* Header */}
-      <header className="border-b border-gray-800 p-6">
-        <div className="flex justify-between items-center">
+      <header className="border-b border-[#333333] p-6">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tighter">Social Tipping</h1>
-            <p className="text-gray-400 mt-2">Support your favorite creators with ETH</p>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              Social Tipping
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">Support creators with ETH</p>
           </div>
           <button
             onClick={connectWallet}
-            className="bg-white text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+            className="bg-white hover:bg-gray-100 text-black px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 ease-in-out transform hover:scale-[1.02]"
           >
             {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Connect Wallet'}
           </button>
@@ -328,27 +330,29 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto p-6 space-y-12">
+      <main className="max-w-6xl mx-auto p-6 space-y-10">
         {/* Creator Registration */}
-        <section className="bg-gray-900 rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Become a Creator</h2>
+        <section className="bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-xl p-8 border border-[#333333]">
+          <h2 className="text-xl font-semibold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            Become a Creator
+          </h2>
           <div className="space-y-4">
             <input
               type="text"
               placeholder="Creator Name"
-              className="w-full bg-black border border-gray-800 rounded-lg p-3 focus:ring-2 focus:ring-white"
+              className="w-full bg-black/50 border border-[#333333] rounded-lg p-3 text-sm focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all duration-200"
               value={creatorName}
               onChange={(e) => setCreatorName(e.target.value)}
             />
             <textarea
               placeholder="Description"
-              className="w-full bg-black border border-gray-800 rounded-lg p-3 focus:ring-2 focus:ring-white"
+              className="w-full bg-black/50 border border-[#333333] rounded-lg p-3 text-sm focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all duration-200 min-h-[100px]"
               value={creatorDescription}
               onChange={(e) => setCreatorDescription(e.target.value)}
             />
             <button 
               onClick={registerAsCreator}
-              className="w-full bg-white text-black py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+              className="w-full bg-white hover:bg-gray-100 text-black py-3 rounded-lg font-medium transition-all duration-200 ease-in-out transform hover:scale-[1.02] text-sm"
             >
               Register as Creator
             </button>
@@ -357,38 +361,44 @@ function App() {
 
         {/* Creators List */}
         <section className="space-y-6">
-          <h2 className="text-xl font-semibold">Featured Creators</h2>
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            Featured Creators
+          </h2>
           {isLoading ? (
-            <div className="text-center py-4">Loading creators...</div>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+            </div>
           ) : creators.length === 0 ? (
-            <div className="text-center py-4 text-gray-400">No creators found. Be the first to register!</div>
+            <div className="text-center py-12 bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-xl border border-[#333333]">
+              <p className="text-gray-400">No creators found. Be the first to register!</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {creators.map((creator, index) => (
-                <div key={index} className="bg-gray-900 rounded-xl p-6 space-y-4">
-                  <div className="flex justify-between items-start">
+                <div key={index} className="bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-xl p-6 border border-[#333333] hover:border-[#444444] transition-all duration-200">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-semibold">{creator.name}</h3>
-                      <p className="text-gray-400 text-sm">
+                      <h3 className="font-medium text-lg">{creator.name}</h3>
+                      <p className="text-gray-400 text-sm font-mono">
                         {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
                       </p>
                     </div>
-                    <span className="bg-gray-800 px-3 py-1 rounded-full text-sm">
+                    <span className="bg-black/30 px-4 py-1.5 rounded-full text-sm border border-[#333333]">
                       💎 {ethers.formatEther(creator.totalTips)} ETH
                     </span>
                   </div>
-                  <p className="text-gray-300">{creator.description}</p>
-                  <div className="space-y-2">
+                  <p className="text-gray-300 text-sm mb-6">{creator.description}</p>
+                  <div className="space-y-3">
                     <input
                       type="number"
                       step="0.001"
                       placeholder="Amount in ETH"
-                      className="w-full bg-black border border-gray-800 rounded-lg p-3 focus:ring-2 focus:ring-white"
+                      className="w-full bg-black/50 border border-[#333333] rounded-lg p-3 text-sm focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all duration-200"
                       onChange={(e) => setTipAmount(e.target.value)}
                     />
                     <button 
                       onClick={() => sendTip(creator.walletAddress, tipAmount)}
-                      className="w-full bg-white text-black py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                      className="w-full bg-white hover:bg-gray-100 text-black py-2.5 rounded-lg font-medium transition-all duration-200 ease-in-out transform hover:scale-[1.02] text-sm"
                     >
                       Send Tip
                     </button>
@@ -401,8 +411,8 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 p-6 mt-12">
-        <p className="text-center text-gray-400">
+      <footer className="border-t border-[#333333] p-6 mt-12">
+        <p className="text-center text-sm text-gray-400">
           Built with Ethereum Smart Contracts & React
         </p>
       </footer>
