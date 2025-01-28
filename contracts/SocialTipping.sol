@@ -14,14 +14,28 @@ contract SocialTipping is ReentrancyGuard {
         bool isRegistered;
     }
 
+    // Struct to store tip information
+    struct Tip {
+        address from;
+        address to;
+        uint256 amount;
+        uint256 timestamp;
+    }
+
     // Mapping from creator address to Creator struct
     mapping(address => Creator) public creators;
     // Array to store all creator addresses
     address[] public creatorAddresses;
 
+    // Array to store all tips
+    Tip[] public tips;
+
+    // Mapping to track tips received by each creator
+    mapping(address => uint256[]) public creatorTips;
+
     // Events
     event CreatorRegistered(address indexed creator, string name);
-    event TipSent(address indexed from, address indexed to, uint256 amount);
+    event TipSent(address indexed from, address indexed to, uint256 amount, uint256 timestamp);
 
     // Register as a content creator
     function registerCreator(string memory _name, string memory _description) external {
@@ -44,10 +58,25 @@ contract SocialTipping is ReentrancyGuard {
         require(creators[_creator].isRegistered, "Creator not registered");
         require(msg.value > 0, "Tip amount must be greater than 0");
 
+        // Update creator's total tips
         creators[_creator].totalTips += msg.value;
+        
+        // Create and store tip record
+        Tip memory newTip = Tip({
+            from: msg.sender,
+            to: _creator,
+            amount: msg.value,
+            timestamp: block.timestamp
+        });
+        
+        tips.push(newTip);
+        creatorTips[_creator].push(tips.length - 1);
+
+        // Transfer the tip
         creators[_creator].walletAddress.transfer(msg.value);
         
-        emit TipSent(msg.sender, _creator, msg.value);
+        // Emit event with timestamp
+        emit TipSent(msg.sender, _creator, msg.value, block.timestamp);
     }
 
     // Get all creators
@@ -64,5 +93,27 @@ contract SocialTipping is ReentrancyGuard {
     // Get creator details
     function getCreator(address _creator) external view returns (Creator memory) {
         return creators[_creator];
+    }
+
+    // Get all tips
+    function getAllTips() external view returns (Tip[] memory) {
+        return tips;
+    }
+
+    // Get tips for a specific creator
+    function getCreatorTips(address _creator) external view returns (Tip[] memory) {
+        uint256[] memory tipIndexes = creatorTips[_creator];
+        Tip[] memory creatorTipList = new Tip[](tipIndexes.length);
+        
+        for (uint i = 0; i < tipIndexes.length; i++) {
+            creatorTipList[i] = tips[tipIndexes[i]];
+        }
+        
+        return creatorTipList;
+    }
+
+    // Get total number of tips
+    function getTotalTipsCount() external view returns (uint256) {
+        return tips.length;
     }
 } 
