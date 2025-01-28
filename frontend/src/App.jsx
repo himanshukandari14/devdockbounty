@@ -76,6 +76,7 @@ function App() {
   const [sendingTipTo, setSendingTipTo] = useState(null)
   const [tipAmounts, setTipAmounts] = useState({})
   const [showAlreadyRegistered, setShowAlreadyRegistered] = useState(false)
+  const [leaderboardView, setLeaderboardView] = useState('grid')
 
   const themes = {
     dark: {
@@ -765,30 +766,15 @@ function App() {
           onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
           className={`p-2 rounded-lg transition-all ${themes[theme].border} ${themes[theme].hover}`}
         >
-          {viewMode === 'list' ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          )}
+         
+        
         </button>
 
         <button
           onClick={() => setIsCompact(!isCompact)}
           className={`p-2 rounded-lg transition-all ${themes[theme].border} ${themes[theme].hover}`}
         >
-          {isCompact ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8v.01M4 12v.01M4 16v.01M8 8h12M8 12h12M8 16h12" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
-          )}
+         
         </button>
       </div>
     </div>
@@ -850,9 +836,8 @@ function App() {
     </AnimatePresence>
   ));
 
-  // Add this new component for the Leaderboard
+  // Update the Leaderboard component
   const Leaderboard = ({ creators, theme }) => {
-    // Sort creators by total tips
     const sortedCreators = [...creators].sort((a, b) => 
       Number(b.totalTips) - Number(a.totalTips)
     );
@@ -867,11 +852,32 @@ function App() {
       >
         <div className="bg-black/40 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden">
           <div className="p-6">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 mb-6">
-              Top Creators
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                Top Creators
+              </h2>
+              
+              {/* View toggle button */}
+              <button
+                onClick={() => setLeaderboardView(prev => prev === 'grid' ? 'list' : 'grid')}
+                className="p-2 rounded-lg transition-all bg-white/10 hover:bg-white/20"
+                title={leaderboardView === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {leaderboardView === 'grid' ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  )}
+                </svg>
+              </button>
+            </div>
             
-            <div className="space-y-4">
+            <div className={`${
+              leaderboardView === 'grid' 
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                : 'space-y-4'
+            }`}>
               {sortedCreators.map((creator, index) => (
                 <motion.div
                   key={creator.walletAddress}
@@ -884,9 +890,15 @@ function App() {
                   className="relative group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                  <div className="relative flex items-center gap-4 bg-black/20 p-4 rounded-xl border border-white/10">
+                  <div className={`relative ${
+                    leaderboardView === 'grid'
+                      ? 'flex flex-col p-6'
+                      : 'flex items-center p-4'
+                  } bg-black/20 rounded-xl border border-white/10`}>
                     {/* Rank Medal */}
-                    <div className={`w-12 h-12 flex items-center justify-center rounded-full ${
+                    <div className={`${
+                      leaderboardView === 'grid' ? 'mb-4' : 'mr-4'
+                    } w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full ${
                       index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                       index === 1 ? 'bg-gray-300/20 text-gray-300' :
                       index === 2 ? 'bg-amber-700/20 text-amber-700' :
@@ -902,24 +914,36 @@ function App() {
                     </div>
                     
                     {/* Creator Info */}
-                    <div className="flex-1">
+                    <div className={leaderboardView === 'grid' ? '' : 'flex-1'}>
                       <h3 className="text-lg font-semibold text-white">
                         {creator.name}
                       </h3>
                       <p className="text-sm text-gray-400">
                         {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
                       </p>
+                      {leaderboardView === 'grid' && (
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <p className="text-2xl font-bold text-white">
+                            {ethers.formatEther(creator.totalTips)} ETH
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            Total Tips
+                          </p>
+                        </div>
+                      )}
                     </div>
                     
-                    {/* Stats */}
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-white">
-                        {ethers.formatEther(creator.totalTips)} ETH
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        Total Tips
-                      </p>
-                    </div>
+                    {/* Stats - Only shown in list view */}
+                    {leaderboardView === 'list' && (
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-white">
+                          {ethers.formatEther(creator.totalTips)} ETH
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          Total Tips
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
