@@ -59,7 +59,7 @@
 
    Terminal 2 - Deploy to local network:
    ```bash
-   npx hardhat run scripts/deploy.js --network localhost
+  npx hardhat run scripts/deploy-social-tipping.js --network localhost
    ```
 
    Terminal 3 - Launch Vite dev server:
