@@ -1,7 +1,7 @@
 # Social Tipping Platform
 
 <div align="center">
-  <img src="frontend/src/assets/logo.png" alt="Social Tipping Logo" width="200"/>
+  <img src="frontend/src/assets/tipkaro.png" alt="Social Tipping Logo" width="200"/>
   <p>A decentralized platform that empowers content creators through direct cryptocurrency tips.</p>
 </div>
 

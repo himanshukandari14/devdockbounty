@@ -977,7 +977,7 @@ function App() {
               animate={{ opacity: 1, x: 0 }}
             >
               <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                Social Tipping
+                Tip Karo
               </h1>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-gray-400">Powered by AI Documentation</p>
@@ -1215,7 +1215,7 @@ function App() {
         <div className="max-w-6xl mx-auto py-12 px-6">
           <div className="text-center space-y-4">
             <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-              Social Tipping
+              Tip Karo
             </h3>
             <p className="text-gray-400">
               Empowering creators through AI-enhanced decentralized support
