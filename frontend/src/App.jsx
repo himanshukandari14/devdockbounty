@@ -9,6 +9,7 @@ function App() {
   const [account, setAccount] = useState('')
   const [provider, setProvider] = useState(null)
   const [contract, setContract] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const connectWallet = async () => {
     try {
@@ -291,12 +292,22 @@ function App() {
   const loadCreators = async () => {
     try {
       if (!contract) return
+      setIsLoading(true)
       const allCreators = await contract.getAllCreators()
       setCreators(allCreators)
     } catch (error) {
       console.error('Error loading creators:', error)
+      setCreators([])
+    } finally {
+      setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (contract) {
+      loadCreators()
+    }
+  }, [contract])
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -347,39 +358,45 @@ function App() {
         {/* Creators List */}
         <section className="space-y-6">
           <h2 className="text-xl font-semibold">Featured Creators</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {creators.map((creator, index) => (
-              <div key={index} className="bg-gray-900 rounded-xl p-6 space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{creator.name}</h3>
-                    <p className="text-gray-400 text-sm">
-                      {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
-                    </p>
+          {isLoading ? (
+            <div className="text-center py-4">Loading creators...</div>
+          ) : creators.length === 0 ? (
+            <div className="text-center py-4 text-gray-400">No creators found. Be the first to register!</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {creators.map((creator, index) => (
+                <div key={index} className="bg-gray-900 rounded-xl p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{creator.name}</h3>
+                      <p className="text-gray-400 text-sm">
+                        {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
+                      </p>
+                    </div>
+                    <span className="bg-gray-800 px-3 py-1 rounded-full text-sm">
+                      💎 {ethers.formatEther(creator.totalTips)} ETH
+                    </span>
                   </div>
-                  <span className="bg-gray-800 px-3 py-1 rounded-full text-sm">
-                    💎 {ethers.formatEther(creator.totalTips)} ETH
-                  </span>
+                  <p className="text-gray-300">{creator.description}</p>
+                  <div className="space-y-2">
+                    <input
+                      type="number"
+                      step="0.001"
+                      placeholder="Amount in ETH"
+                      className="w-full bg-black border border-gray-800 rounded-lg p-3 focus:ring-2 focus:ring-white"
+                      onChange={(e) => setTipAmount(e.target.value)}
+                    />
+                    <button 
+                      onClick={() => sendTip(creator.walletAddress, tipAmount)}
+                      className="w-full bg-white text-black py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                    >
+                      Send Tip
+                    </button>
+                  </div>
                 </div>
-                <p className="text-gray-300">{creator.description}</p>
-                <div className="space-y-2">
-                  <input
-                    type="number"
-                    step="0.001"
-                    placeholder="Amount in ETH"
-                    className="w-full bg-black border border-gray-800 rounded-lg p-3 focus:ring-2 focus:ring-white"
-                    onChange={(e) => setTipAmount(e.target.value)}
-                  />
-                  <button 
-                    onClick={() => sendTip(creator.walletAddress, tipAmount)}
-                    className="w-full bg-white text-black py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-                  >
-                    Send Tip
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
