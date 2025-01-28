@@ -155,23 +155,23 @@ export default function History({ contract }) {
               transition={{ delay: index * 0.1 }}
               className="relative group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-black/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300" />
               <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-400">From</span>
-                      <span className="text-sm font-mono bg-white/10 px-2 py-1 rounded">
+                      <span className="text-sm font-mono bg-red-500/10 text-red-500 px-2 py-1 rounded border border-red-500/20">
                         {formatAddress(tip.from)}
                       </span>
                       <span className="text-sm text-gray-400">to</span>
-                      <span className="text-sm font-mono bg-white/10 px-2 py-1 rounded">
+                      <span className="text-sm font-mono bg-green-500/10 text-green-500 px-2 py-1 rounded border border-green-500/20">
                         {formatAddress(tip.to)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-400">Amount:</span>
-                      <span className="text-sm font-medium bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+                      <span className="text-sm font-medium text-white">
                         {tip.amount} ETH
                       </span>
                     </div>
