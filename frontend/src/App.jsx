@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import { motion, AnimatePresence } from 'framer-motion'
+import devdocLogo from './assets/logo.png'
 
 function App() {
   const [creatorName, setCreatorName] = useState('')
@@ -13,6 +14,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [aiSuggestion, setAiSuggestion] = useState('')
   const [showTutorial, setShowTutorial] = useState(false)
+  const [showExtensionPromo, setShowExtensionPromo] = useState(true)
 
   const connectWallet = async () => {
     try {
@@ -370,6 +372,85 @@ function App() {
     </AnimatePresence>
   )
 
+  // Extension Promo Component
+  const ExtensionPromo = ({ isVisible, onClose }) => (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          className="fixed bottom-6 right-6 z-50"
+        >
+          <div className="relative bg-black/90 backdrop-blur-xl p-6 rounded-xl border border-white/10 max-w-md shadow-2xl">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              ×
+            </button>
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br  flex items-center justify-center">
+                <span className="text-2xl">
+                  <img src={devdocLogo} alt="devdock logo" />
+                </span>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                  Enhance Your Dev Experience
+                </h4>
+                <p className="text-sm text-gray-300">
+                  Get AI-powered documentation and code explanations right in your IDE with the DevDoc Extension.
+                </p>
+                <div className="flex gap-3 mt-4">
+                  <motion.a
+                    href="https://marketplace.visualstudio.com/items?itemName=agent.devdock"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z"/>
+                    </svg>
+                    Install Extension
+                  </motion.a>
+                  <motion.a
+                    href="https://devdock.ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Learn More →
+                  </motion.a>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center gap-4 text-sm text-gray-400">
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  AI-Powered
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  Real-Time
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  Free to Use
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#0a0a0a] to-[#000000] text-white">
       {/* Animated Background */}
@@ -578,6 +659,12 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Add Extension Promo before closing div */}
+      <ExtensionPromo 
+        isVisible={showExtensionPromo} 
+        onClose={() => setShowExtensionPromo(false)} 
+      />
     </div>
   )
 }
