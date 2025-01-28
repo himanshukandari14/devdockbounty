@@ -850,6 +850,92 @@ function App() {
     </AnimatePresence>
   ));
 
+  // Add this new component for the Leaderboard
+  const Leaderboard = ({ creators, theme }) => {
+    // Sort creators by total tips
+    const sortedCreators = [...creators].sort((a, b) => 
+      Number(b.totalTips) - Number(a.totalTips)
+    );
+
+    return (
+      <motion.div
+        key="leaderboard"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="max-w-6xl mx-auto p-6"
+      >
+        <div className="bg-black/40 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden">
+          <div className="p-6">
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 mb-6">
+              Top Creators
+            </h2>
+            
+            <div className="space-y-4">
+              {sortedCreators.map((creator, index) => (
+                <motion.div
+                  key={creator.walletAddress}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    x: 0,
+                    transition: { delay: index * 0.1 }
+                  }}
+                  className="relative group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                  <div className="relative flex items-center gap-4 bg-black/20 p-4 rounded-xl border border-white/10">
+                    {/* Rank Medal */}
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-full ${
+                      index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                      index === 1 ? 'bg-gray-300/20 text-gray-300' :
+                      index === 2 ? 'bg-amber-700/20 text-amber-700' :
+                      'bg-white/10 text-gray-400'
+                    }`}>
+                      {index < 3 ? (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                        </svg>
+                      ) : (
+                        <span className="text-lg font-bold">{index + 1}</span>
+                      )}
+                    </div>
+                    
+                    {/* Creator Info */}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white">
+                        {creator.name}
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
+                      </p>
+                    </div>
+                    
+                    {/* Stats */}
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-white">
+                        {ethers.formatEther(creator.totalTips)} ETH
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Total Tips
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {creators.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-400">No creators yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className={`min-h-screen ${themes[theme].bg} ${themes[theme].text} transition-colors duration-300`}>
       {/* Animated Background */}
@@ -939,6 +1025,23 @@ function App() {
           >
             <span>History</span>
             {activeTab === 'history' && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
+                initial={false}
+              />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('leaderboard')}
+            className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+              activeTab === 'leaderboard'
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <span>Leaderboard</span>
+            {activeTab === 'leaderboard' && (
               <motion.div
                 layoutId="activeTab"
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
@@ -1057,7 +1160,7 @@ function App() {
               </section>
             </main>
           </motion.div>
-        ) : (
+        ) : activeTab === 'history' ? (
           <motion.div
             key="history"
             initial={{ opacity: 0, y: 20 }}
@@ -1072,6 +1175,11 @@ function App() {
               isCompact={isCompact}
             />
           </motion.div>
+        ) : (
+          <Leaderboard 
+            creators={creators}
+            theme={themes[theme]}
+          />
         )}
       </AnimatePresence>
 
