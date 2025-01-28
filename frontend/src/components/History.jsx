@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 
 export default function History({ contract }) {
   const [tips, setTips] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [totalTips, setTotalTips] = useState("0");
   const [stats, setStats] = useState({
     totalTransactions: 0,
@@ -48,7 +48,9 @@ export default function History({ contract }) {
       }
     };
 
-    loadTipHistory();
+    if (contract) {
+      loadTipHistory();
+    }
   }, [contract]);
 
   const formatAddress = (address) => `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -74,6 +76,21 @@ export default function History({ contract }) {
       </div>
     </motion.div>
   );
+
+  if (!contract) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-20 bg-black/40 backdrop-blur-xl rounded-xl border border-white/10"
+        >
+          <p className="text-gray-400 text-lg mb-4">Please connect your wallet to view transaction history</p>
+          <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse mx-auto"></div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">

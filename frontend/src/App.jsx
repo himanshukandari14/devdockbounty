@@ -18,9 +18,12 @@ function App() {
   const [showTutorial, setShowTutorial] = useState(false)
   const [showExtensionPromo, setShowExtensionPromo] = useState(true)
   const [activeTab, setActiveTab] = useState('main')
+  const [isConnecting, setIsConnecting] = useState(false)
 
   const connectWallet = async () => {
     try {
+      setIsConnecting(true)
+      
       if (!window.ethereum) {
         alert('Please install MetaMask!')
         return
@@ -420,6 +423,8 @@ function App() {
       loadCreators()
     } catch (error) {
       console.error('Error connecting wallet:', error)
+    } finally {
+      setIsConnecting(false)
     }
   }
 
@@ -685,13 +690,23 @@ function App() {
             </motion.div>
             <motion.button
               onClick={connectWallet}
+              disabled={isConnecting}
               className="relative group px-6 py-3 rounded-lg overflow-hidden"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-300 group-hover:opacity-90" />
-              <span className="relative text-white font-medium">
-                {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Connect Wallet'}
+              <span className="relative text-white font-medium flex items-center gap-2">
+                {isConnecting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Connecting...
+                  </>
+                ) : account ? (
+                  `${account.slice(0, 6)}...${account.slice(-4)}`
+                ) : (
+                  'Connect Wallet'
+                )}
               </span>
             </motion.button>
           </div>
