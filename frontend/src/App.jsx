@@ -8,7 +8,7 @@ import History from './components/History';
 function App() {
   const [creatorName, setCreatorName] = useState('')
   const [creatorDescription, setCreatorDescription] = useState('')
-  const [tipAmount, setTipAmount] = useState('')
+  const [tipAmounts, setTipAmounts] = useState({})
   const [creators, setCreators] = useState([])
   const [account, setAccount] = useState('')
   const [provider, setProvider] = useState(null)
@@ -22,6 +22,7 @@ function App() {
   const [theme, setTheme] = useState('dark')
   const [viewMode, setViewMode] = useState('list')
   const [isCompact, setIsCompact] = useState(false)
+  const [sendingTipTo, setSendingTipTo] = useState(null)
 
   const themes = {
     dark: {
@@ -468,13 +469,15 @@ function App() {
   const sendTip = async (creatorAddress, amount) => {
     try {
       if (!contract) return
-      // Updated to use parseEther from ethers v6
+      setSendingTipTo(creatorAddress)
       const tipAmountWei = ethers.parseEther(amount)
       const tx = await contract.tipCreator(creatorAddress, { value: tipAmountWei })
       await tx.wait()
       loadCreators()
     } catch (error) {
       console.error('Error sending tip:', error)
+    } finally {
+      setSendingTipTo(null)
     }
   }
 
@@ -646,41 +649,77 @@ function App() {
     }));
   };
 
+  const handleTipAmountChange = (creatorAddress, value) => {
+    // Allow empty string for clearing input
+    if (value === '') {
+      setTipAmounts(prev => ({
+        ...prev,
+        [creatorAddress]: ''
+      }))
+      return
+    }
+
+    // Convert to number and validate
+    const numValue = parseFloat(value)
+    if (!isNaN(numValue) && numValue >= 0) {
+      setTipAmounts(prev => ({
+        ...prev,
+        [creatorAddress]: value
+      }))
+    }
+  }
+
   // Custom Card component for creators
-  const CreatorCard = ({ item, onTip }) => (
-    <div className="p-4 flex flex-col h-full">
-      <h3 className="text-lg font-bold text-zinc-100 tracking-wide">
-        {item.title}
-      </h3>
-      <p className="text-zinc-400 text-sm font-mono mt-1">
-        {item.address.slice(0, 6)}...{item.address.slice(-4)}
-      </p>
-      <p className="mt-4 text-zinc-400 tracking-wide leading-relaxed text-sm">
-        {item.description}
-      </p>
-      <div className="mt-auto pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-zinc-400 text-sm">Total Tips:</span>
-          <span className="text-zinc-100 font-semibold">{item.stats}</span>
+  const CreatorCard = ({ item, onTip }) => {
+    const isSending = sendingTipTo === item.address;
+    const currentTipAmount = tipAmounts[item.address] || '';
+    
+    return (
+      <div className="p-4 flex flex-col h-full">
+        <h3 className="text-lg font-bold text-zinc-100 tracking-wide">
+          {item.title}
+        </h3>
+        <p className="text-zinc-400 text-sm font-mono mt-1">
+          {item.address.slice(0, 6)}...{item.address.slice(-4)}
+        </p>
+        <p className="mt-4 text-zinc-400 tracking-wide leading-relaxed text-sm">
+          {item.description}
+        </p>
+        <div className="mt-auto pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-zinc-400 text-sm">Total Tips:</span>
+            <span className="text-zinc-100 font-semibold">{item.stats}</span>
+          </div>
+          <input
+            type="number"
+            step="any"
+            min="0"
+            placeholder="Amount in ETH"
+            className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 mb-2"
+            value={currentTipAmount}
+            onChange={(e) => handleTipAmountChange(item.address, e.target.value)}
+            disabled={isSending}
+          />
+          <motion.button
+            onClick={() => onTip(item.address, currentTipAmount)}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-2 rounded-lg font-medium text-white text-sm shadow-lg shadow-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={{ scale: isSending ? 1 : 1.02 }}
+            whileTap={{ scale: isSending ? 1 : 0.98 }}
+            disabled={isSending || !currentTipAmount}
+          >
+            {isSending ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Sending...</span>
+              </div>
+            ) : (
+              'Send Tip'
+            )}
+          </motion.button>
         </div>
-        <input
-          type="number"
-          step="0.001"
-          placeholder="Amount in ETH"
-          className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 mb-2"
-          onChange={(e) => setTipAmount(e.target.value)}
-        />
-        <motion.button
-          onClick={() => onTip(item.address, tipAmount)}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-2 rounded-lg font-medium text-white text-sm shadow-lg shadow-purple-500/30"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          Send Tip
-        </motion.button>
       </div>
-    </div>
-  );
+    );
+  };
 
   // UI Controls Component
   const UIControls = () => (
