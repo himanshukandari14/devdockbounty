@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function App() {
   const [creatorName, setCreatorName] = useState('')
@@ -10,6 +11,8 @@ function App() {
   const [provider, setProvider] = useState(null)
   const [contract, setContract] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState('')
+  const [showTutorial, setShowTutorial] = useState(false)
 
   const connectWallet = async () => {
     try {
@@ -309,112 +312,271 @@ function App() {
     }
   }, [contract])
 
-  return (
-    <div className="min-h-screen bg-[#000000] text-white">
-      {/* Header */}
-      <header className="border-b border-[#333333] p-6">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-              Social Tipping
-            </h1>
-            <p className="text-sm text-gray-400 mt-1">Support creators with ETH</p>
-          </div>
-          <button
-            onClick={connectWallet}
-            className="bg-white hover:bg-gray-100 text-black px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 ease-in-out transform hover:scale-[1.02]"
+  // AI-like suggestion generator for descriptions
+  const generateAISuggestion = () => {
+    const suggestions = [
+      "I create educational content about blockchain technology and Web3 development.",
+      "Building the future of decentralized applications, one tutorial at a time.",
+      "Sharing insights about smart contract development and cryptocurrency.",
+      "Teaching others how to build on Ethereum and contribute to Web3.",
+    ]
+    setAiSuggestion(suggestions[Math.floor(Math.random() * suggestions.length)])
+  }
+
+  // Documentation modal component
+  const DocModal = ({ isOpen, onClose }) => (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.95 }}
+            className="bg-black/90 p-6 rounded-xl border border-white/10 max-w-2xl w-full"
+            onClick={e => e.stopPropagation()}
           >
-            {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Connect Wallet'}
-          </button>
+            <h3 className="text-xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+              Quick Start Guide
+            </h3>
+            <div className="space-y-4 text-gray-300">
+              <div className="bg-white/5 p-4 rounded-lg">
+                <h4 className="font-medium text-white mb-2">1. Connect Your Wallet</h4>
+                <p className="text-sm">Click the "Connect Wallet" button to link your MetaMask wallet.</p>
+              </div>
+              <div className="bg-white/5 p-4 rounded-lg">
+                <h4 className="font-medium text-white mb-2">2. Register as Creator</h4>
+                <p className="text-sm">Fill in your details and click "Start Your Creator Journey".</p>
+              </div>
+              <div className="bg-white/5 p-4 rounded-lg">
+                <h4 className="font-medium text-white mb-2">3. Receive Tips</h4>
+                <p className="text-sm">Share your profile with supporters to receive ETH tips directly.</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="mt-6 w-full bg-gradient-to-r from-purple-600 to-pink-600 py-2 rounded-lg"
+            >
+              Got it!
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#0a0a0a] to-[#000000] text-white">
+      {/* Animated Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,24,0.2),rgba(0,0,0,0.9))]" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-20" />
+      </div>
+
+      {/* Header */}
+      <header className="backdrop-blur-sm border-b border-white/10 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex justify-between items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                Social Tipping
+              </h1>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-400">Powered by AI Documentation</p>
+                <button
+                  onClick={() => setShowTutorial(true)}
+                  className="text-xs bg-white/10 px-2 py-1 rounded-full hover:bg-white/20 transition-colors"
+                >
+                  View Guide
+                </button>
+              </div>
+            </motion.div>
+            <motion.button
+              onClick={connectWallet}
+              className="relative group px-6 py-3 rounded-lg overflow-hidden"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-300 group-hover:opacity-90" />
+              <span className="relative text-white font-medium">
+                {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Connect Wallet'}
+              </span>
+            </motion.button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-6 space-y-10">
-        {/* Creator Registration */}
-        <section className="bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-xl p-8 border border-[#333333]">
-          <h2 className="text-xl font-semibold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-            Become a Creator
+      <main className="max-w-6xl mx-auto p-6 space-y-12">
+        {/* Hero Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-16 space-y-6"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+            Support Your Favorite Creators
           </h2>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Creator Name"
-              className="w-full bg-black/50 border border-[#333333] rounded-lg p-3 text-sm focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all duration-200"
-              value={creatorName}
-              onChange={(e) => setCreatorName(e.target.value)}
-            />
-            <textarea
-              placeholder="Description"
-              className="w-full bg-black/50 border border-[#333333] rounded-lg p-3 text-sm focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all duration-200 min-h-[100px]"
-              value={creatorDescription}
-              onChange={(e) => setCreatorDescription(e.target.value)}
-            />
-            <button 
-              onClick={registerAsCreator}
-              className="w-full bg-white hover:bg-gray-100 text-black py-3 rounded-lg font-medium transition-all duration-200 ease-in-out transform hover:scale-[1.02] text-sm"
-            >
-              Register as Creator
-            </button>
+          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+            Join the future of creator economy. Direct support with cryptocurrency, 
+            no middlemen, instant payments.
+          </p>
+        </motion.section>
+
+        {/* Creator Registration */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative group"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+          <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-8 border border-white/10">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                Become a Creator
+              </h2>
+              <button
+                onClick={generateAISuggestion}
+                className="text-sm bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors flex items-center gap-2"
+              >
+                <span className="animate-pulse">✨</span>
+                AI Suggest
+              </button>
+            </div>
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Creator Name"
+                className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                value={creatorName}
+                onChange={(e) => setCreatorName(e.target.value)}
+              />
+              <div className="relative">
+                <textarea
+                  placeholder="Share your story..."
+                  className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 min-h-[120px]"
+                  value={creatorDescription || aiSuggestion}
+                  onChange={(e) => setCreatorDescription(e.target.value)}
+                />
+                {aiSuggestion && (
+                  <div className="absolute bottom-2 right-2">
+                    <span className="text-xs text-gray-500">AI Generated ✨</span>
+                  </div>
+                )}
+              </div>
+              <motion.button
+                onClick={registerAsCreator}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-medium text-white shadow-lg shadow-purple-500/30"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Start Your Creator Journey
+              </motion.button>
+            </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Creators List */}
-        <section className="space-y-6">
-          <h2 className="text-xl font-semibold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+        <section className="space-y-8">
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
             Featured Creators
           </h2>
           {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+            <div className="flex items-center justify-center py-20">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-t-2 border-purple-500 animate-spin" />
+                <div className="absolute inset-2 rounded-full border-t-2 border-pink-500 animate-spin-slow" />
+              </div>
             </div>
           ) : creators.length === 0 ? (
-            <div className="text-center py-12 bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-xl border border-[#333333]">
-              <p className="text-gray-400">No creators found. Be the first to register!</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20 bg-black/40 backdrop-blur-xl rounded-xl border border-white/10"
+            >
+              <p className="text-gray-400 text-lg">Be the first creator to join our platform!</p>
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {creators.map((creator, index) => (
-                <div key={index} className="bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-xl p-6 border border-[#333333] hover:border-[#444444] transition-all duration-200">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-medium text-lg">{creator.name}</h3>
-                      <p className="text-gray-400 text-sm font-mono">
-                        {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
-                      </p>
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="group relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                  <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                          {creator.name}
+                        </h3>
+                        <p className="text-gray-400 text-sm font-mono mt-1">
+                          {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
+                        </p>
+                      </div>
+                      <div className="bg-black/60 px-4 py-2 rounded-full border border-white/10">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-bold">
+                          {ethers.formatEther(creator.totalTips)} ETH
+                        </span>
+                      </div>
                     </div>
-                    <span className="bg-black/30 px-4 py-1.5 rounded-full text-sm border border-[#333333]">
-                      💎 {ethers.formatEther(creator.totalTips)} ETH
-                    </span>
+                    <p className="text-gray-300 mb-6">{creator.description}</p>
+                    <div className="space-y-3">
+                      <input
+                        type="number"
+                        step="0.001"
+                        placeholder="Amount in ETH"
+                        className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        onChange={(e) => setTipAmount(e.target.value)}
+                      />
+                      <motion.button
+                        onClick={() => sendTip(creator.walletAddress, tipAmount)}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg font-medium text-white shadow-lg shadow-purple-500/30"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        Support Creator
+                      </motion.button>
+                    </div>
                   </div>
-                  <p className="text-gray-300 text-sm mb-6">{creator.description}</p>
-                  <div className="space-y-3">
-                    <input
-                      type="number"
-                      step="0.001"
-                      placeholder="Amount in ETH"
-                      className="w-full bg-black/50 border border-[#333333] rounded-lg p-3 text-sm focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all duration-200"
-                      onChange={(e) => setTipAmount(e.target.value)}
-                    />
-                    <button 
-                      onClick={() => sendTip(creator.walletAddress, tipAmount)}
-                      className="w-full bg-white hover:bg-gray-100 text-black py-2.5 rounded-lg font-medium transition-all duration-200 ease-in-out transform hover:scale-[1.02] text-sm"
-                    >
-                      Send Tip
-                    </button>
-                  </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
         </section>
       </main>
 
+      {/* Documentation Modal */}
+      <DocModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+
       {/* Footer */}
-      <footer className="border-t border-[#333333] p-6 mt-12">
-        <p className="text-center text-sm text-gray-400">
-          Built with Ethereum Smart Contracts & React
-        </p>
+      <footer className="border-t border-white/10 mt-20">
+        <div className="max-w-6xl mx-auto py-12 px-6">
+          <div className="text-center space-y-4">
+            <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+              Social Tipping
+            </h3>
+            <p className="text-gray-400">
+              Empowering creators through AI-enhanced decentralized support
+            </p>
+            <div className="flex justify-center gap-4 text-sm text-gray-500">
+              <span>Built for DevDoc.ai Bounty</span>
+              <span>•</span>
+              <span>Documentation-First Approach</span>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   )
