@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export default function History({ contract }) {
   const [tips, setTips] = useState([]);
@@ -11,6 +12,8 @@ export default function History({ contract }) {
     averageTip: "0",
     highestTip: "0"
   });
+  const [chartData, setChartData] = useState([]);
+  const [timeFrame, setTimeFrame] = useState('weekly'); // 'daily', 'weekly', 'monthly'
 
   useEffect(() => {
     const loadTipHistory = async () => {
@@ -53,6 +56,58 @@ export default function History({ contract }) {
     }
   }, [contract]);
 
+  useEffect(() => {
+    const processChartData = () => {
+      if (!tips.length) return;
+
+      const now = new Date();
+      const timeFrames = {
+        daily: {
+          days: 7,
+          format: (date) => date.toLocaleDateString(undefined, { weekday: 'short' })
+        },
+        weekly: {
+          days: 28,
+          format: (date) => `Week ${Math.ceil(date.getDate() / 7)}`
+        },
+        monthly: {
+          days: 90,
+          format: (date) => date.toLocaleDateString(undefined, { month: 'short' })
+        }
+      };
+
+      const { days, format } = timeFrames[timeFrame];
+      const startDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+      
+      // Group tips by date
+      const groupedTips = tips.reduce((acc, tip) => {
+        const date = new Date(tip.timestamp);
+        if (date >= startDate) {
+          const key = format(date);
+          if (!acc[key]) {
+            acc[key] = {
+              date: key,
+              totalAmount: 0,
+              count: 0
+            };
+          }
+          acc[key].totalAmount += parseFloat(tip.amount);
+          acc[key].count += 1;
+        }
+        return acc;
+      }, {});
+
+      // Convert to array and sort
+      const data = Object.values(groupedTips).sort((a, b) => 
+        new Date(a.date) - new Date(b.date)
+      );
+
+      setChartData(data);
+    };
+
+    processChartData();
+  }, [tips, timeFrame]);
+
   const formatAddress = (address) => `${address.slice(0, 6)}...${address.slice(-4)}`;
   
   const formatTimestamp = (timestamp) => {
@@ -72,6 +127,93 @@ export default function History({ contract }) {
         <div>
           <p className="text-sm text-gray-400">{title}</p>
           <p className="text-2xl font-bold text-white">{value}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const ChartSection = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-black/40 backdrop-blur-xl rounded-xl p-6 border border-white/10"
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold text-white">Transaction Analysis</h3>
+        <div className="flex gap-2">
+          {['daily', 'weekly', 'monthly'].map((frame) => (
+            <button
+              key={frame}
+              onClick={() => setTimeFrame(frame)}
+              className={`px-3 py-1 rounded-lg text-sm transition-all ${
+                timeFrame === frame
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-black/40 text-gray-400 hover:bg-black/60'
+              }`}
+            >
+              {frame.charAt(0).toUpperCase() + frame.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-[300px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+            <Line 
+              type="monotone" 
+              dataKey="totalAmount" 
+              stroke="#8b5cf6" 
+              strokeWidth={2}
+              dot={{ fill: '#8b5cf6', strokeWidth: 2 }}
+            />
+            <XAxis 
+              dataKey="date" 
+              stroke="#6b7280"
+              tick={{ fill: '#6b7280' }}
+            />
+            <YAxis 
+              stroke="#6b7280"
+              tick={{ fill: '#6b7280' }}
+              label={{ 
+                value: 'Amount (ETH)', 
+                angle: -90, 
+                position: 'insideLeft',
+                fill: '#6b7280'
+              }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '8px',
+                color: '#fff'
+              }}
+              labelStyle={{ color: '#8b5cf6' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mt-6">
+        <div className="bg-black/20 p-4 rounded-lg">
+          <p className="text-sm text-gray-400">Total Volume</p>
+          <p className="text-xl font-bold text-white">
+            {chartData.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(4)} ETH
+          </p>
+        </div>
+        <div className="bg-black/20 p-4 rounded-lg">
+          <p className="text-sm text-gray-400">Average Amount</p>
+          <p className="text-xl font-bold text-white">
+            {(chartData.reduce((sum, item) => sum + item.totalAmount, 0) / 
+              chartData.reduce((sum, item) => sum + item.count, 0) || 0).toFixed(4)} ETH
+          </p>
+        </div>
+        <div className="bg-black/20 p-4 rounded-lg">
+          <p className="text-sm text-gray-400">Total Transactions</p>
+          <p className="text-xl font-bold text-white">
+            {chartData.reduce((sum, item) => sum + item.count, 0)}
+          </p>
         </div>
       </div>
     </motion.div>
@@ -101,6 +243,9 @@ export default function History({ contract }) {
       >
         Transaction History
       </motion.h2>
+
+      {/* Add Chart Section */}
+      <ChartSection />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
