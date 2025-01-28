@@ -1,9 +1,60 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, memo } from 'react'
 import { ethers } from 'ethers'
 import { motion, AnimatePresence } from 'framer-motion'
 import devdocLogo from './assets/logo.png'
 import { HoverEffect } from "./components/ui/card-hover-effect";
 import History from './components/History';
+
+// Move CreatorCard outside of App component and memoize it
+const CreatorCard = memo(({ item, onTip, isSending, currentTipAmount, onTipAmountChange }) => {
+  return (
+    <div className="p-4 flex flex-col h-full">
+      <h3 className="text-lg font-bold text-zinc-100 tracking-wide">
+        {item.title}
+      </h3>
+      <p className="text-zinc-400 text-sm font-mono mt-1">
+        {item.address.slice(0, 6)}...{item.address.slice(-4)}
+      </p>
+      <p className="mt-4 text-zinc-400 tracking-wide leading-relaxed text-sm">
+        {item.description}
+      </p>
+      <div className="mt-auto pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-zinc-400 text-sm">Total Tips:</span>
+          <span className="text-zinc-100 font-semibold">{item.stats}</span>
+        </div>
+        <input
+          type="text"
+          inputMode="decimal"
+          placeholder="Amount in ETH"
+          className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 mb-2"
+          value={currentTipAmount}
+          onChange={(e) => onTipAmountChange(item.address, e.target.value)}
+          disabled={isSending}
+        />
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            onTip(item.address, currentTipAmount);
+          }}
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-2 rounded-lg font-medium text-white text-sm shadow-lg shadow-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          whileHover={{ scale: isSending ? 1 : 1.02 }}
+          whileTap={{ scale: isSending ? 1 : 0.98 }}
+          disabled={isSending}
+        >
+          {isSending ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Sending...</span>
+            </div>
+          ) : (
+            'Send Tip'
+          )}
+        </motion.button>
+      </div>
+    </div>
+  );
+});
 
 function App() {
   const [creatorName, setCreatorName] = useState('')
@@ -24,6 +75,7 @@ function App() {
   const [isCompact, setIsCompact] = useState(false)
   const [sendingTipTo, setSendingTipTo] = useState(null)
   const [tipAmounts, setTipAmounts] = useState({})
+  const [showAlreadyRegistered, setShowAlreadyRegistered] = useState(false)
 
   const themes = {
     dark: {
@@ -455,17 +507,27 @@ function App() {
 
   const registerAsCreator = async () => {
     try {
-      if (!contract) return
-      const tx = await contract.registerCreator(creatorName, creatorDescription)
-      await tx.wait()
+      if (!contract) return;
+      
+      // Check if user is already registered
+      const creator = await contract.getCreator(account);
+      if (creator && creator.isRegistered) {
+        setShowAlreadyRegistered(true);
+        // Auto-hide after 3 seconds
+        setTimeout(() => setShowAlreadyRegistered(false), 3000);
+        return;
+      }
+
+      const tx = await contract.registerCreator(creatorName, creatorDescription);
+      await tx.wait();
       // Reset form and reload creators
-      setCreatorName('')
-      setCreatorDescription('')
-      loadCreators()
+      setCreatorName('');
+      setCreatorDescription('');
+      loadCreators();
     } catch (error) {
-      console.error('Error registering creator:', error)
+      console.error('Error registering creator:', error);
     }
-  }
+  };
 
   const loadCreators = useCallback(async () => {
     try {
@@ -682,57 +744,6 @@ function App() {
     }));
   };
 
-  // Custom Card component for creators
-  const CreatorCard = ({ item, onTip, isSending, currentTipAmount, onTipAmountChange }) => {
-    return (
-      <div className="p-4 flex flex-col h-full">
-        <h3 className="text-lg font-bold text-zinc-100 tracking-wide">
-          {item.title}
-        </h3>
-        <p className="text-zinc-400 text-sm font-mono mt-1">
-          {item.address.slice(0, 6)}...{item.address.slice(-4)}
-        </p>
-        <p className="mt-4 text-zinc-400 tracking-wide leading-relaxed text-sm">
-          {item.description}
-        </p>
-        <div className="mt-auto pt-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-sm">Total Tips:</span>
-            <span className="text-zinc-100 font-semibold">{item.stats}</span>
-          </div>
-          <input
-            type="number"
-            step="0.001"
-            placeholder="Amount in ETH"
-            className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 mb-2"
-            value={currentTipAmount}
-            onChange={(e) => onTipAmountChange(item.address, e.target.value)}
-            disabled={isSending}
-          />
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              onTip(item.address, currentTipAmount);
-            }}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-2 rounded-lg font-medium text-white text-sm shadow-lg shadow-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-            whileHover={{ scale: isSending ? 1 : 1.02 }}
-            whileTap={{ scale: isSending ? 1 : 0.98 }}
-            disabled={isSending}
-          >
-            {isSending ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Sending...</span>
-              </div>
-            ) : (
-              'Send Tip'
-            )}
-          </motion.button>
-        </div>
-      </div>
-    );
-  };
-
   // UI Controls Component
   const UIControls = () => (
     <div className="flex items-center justify-between mb-6 bg-black/20 p-4 rounded-lg border border-white/10">
@@ -782,6 +793,62 @@ function App() {
       </div>
     </div>
   );
+
+  // Add this component near your other component definitions
+  const AlreadyRegisteredPopup = memo(({ isVisible }) => (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          className="fixed bottom-24 right-6 z-50"
+        >
+          <div className="bg-black/90 backdrop-blur-xl p-4 rounded-xl border border-white/10 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-blue-500"
+                  viewBox="0 0 784 784"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M392 784C608.5 784 784 608.5 784 392C784 175.5 608.5 0 392 0C175.5 0 0 175.5 0 392C0 608.5 175.5 784 392 784Z"
+                    fill="currentColor"
+                    fillOpacity="0.1"
+                  />
+                  <path
+                    d="M392 73.5L241.5 295.4L392 397.6L542.5 295.4L392 73.5Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M392 397.6V397.6L241.5 295.4L392 517.3L542.5 295.4L392 397.6Z"
+                    fill="currentColor"
+                    fillOpacity="0.8"
+                  />
+                  <path
+                    d="M392 517.3V710.5L542.5 395.4L392 517.3Z"
+                    fill="currentColor"
+                    fillOpacity="0.6"
+                  />
+                  <path
+                    d="M392 710.5V517.3L241.5 395.4L392 710.5Z"
+                    fill="currentColor"
+                    fillOpacity="0.6"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-medium text-white">Already Registered</h4>
+                <p className="text-sm text-gray-400">You already have a creator account</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  ));
 
   return (
     <div className={`min-h-screen ${themes[theme].bg} ${themes[theme].text} transition-colors duration-300`}>
@@ -1022,7 +1089,7 @@ function App() {
               Empowering creators through AI-enhanced decentralized support
             </p>
             <div className="flex justify-center gap-4 text-sm text-gray-500">
-              <span>Built for DevDoc.ai Bounty</span>
+              <span>Built for DevDock.ai Bounty</span>
               <span>•</span>
               <span>Documentation-First Approach</span>
             </div>
@@ -1035,6 +1102,8 @@ function App() {
         isVisible={showExtensionPromo} 
         onClose={() => setShowExtensionPromo(false)} 
       />
+
+      <AlreadyRegisteredPopup isVisible={showAlreadyRegistered} />
     </div>
   )
 }
