@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import { motion, AnimatePresence } from 'framer-motion'
 import devdocLogo from './assets/logo.png'
+import { HoverEffect } from "./components/ui/card-hover-effect";
 
 function App() {
   const [creatorName, setCreatorName] = useState('')
@@ -451,6 +452,53 @@ function App() {
     </AnimatePresence>
   )
 
+  // Transform creators data for the HoverEffect component
+  const getCreatorCards = () => {
+    return creators.map(creator => ({
+      title: creator.name,
+      description: creator.description,
+      link: "#", // We'll handle click differently
+      stats: ethers.formatEther(creator.totalTips) + " ETH",
+      address: creator.walletAddress
+    }));
+  };
+
+  // Custom Card component for creators
+  const CreatorCard = ({ item, onTip }) => (
+    <div className="p-4 flex flex-col h-full">
+      <h3 className="text-lg font-bold text-zinc-100 tracking-wide">
+        {item.title}
+      </h3>
+      <p className="text-zinc-400 text-sm font-mono mt-1">
+        {item.address.slice(0, 6)}...{item.address.slice(-4)}
+      </p>
+      <p className="mt-4 text-zinc-400 tracking-wide leading-relaxed text-sm">
+        {item.description}
+      </p>
+      <div className="mt-auto pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-zinc-400 text-sm">Total Tips:</span>
+          <span className="text-zinc-100 font-semibold">{item.stats}</span>
+        </div>
+        <input
+          type="number"
+          step="0.001"
+          placeholder="Amount in ETH"
+          className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 mb-2"
+          onChange={(e) => setTipAmount(e.target.value)}
+        />
+        <motion.button
+          onClick={() => onTip(item.address, tipAmount)}
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-2 rounded-lg font-medium text-white text-sm shadow-lg shadow-purple-500/30"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          Send Tip
+        </motion.button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#0a0a0a] to-[#000000] text-white">
       {/* Animated Background */}
@@ -565,11 +613,12 @@ function App() {
           </div>
         </motion.section>
 
-        {/* Creators List */}
-        <section className="space-y-8">
-          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+        {/* Updated Creators List */}
+        <section className="max-w-6xl mx-auto px-6">
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 mb-8">
             Featured Creators
           </h2>
+          
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <div className="relative w-16 h-16">
@@ -586,54 +635,15 @@ function App() {
               <p className="text-gray-400 text-lg">Be the first creator to join our platform!</p>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {creators.map((creator, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group relative"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <h3 className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                          {creator.name}
-                        </h3>
-                        <p className="text-gray-400 text-sm font-mono mt-1">
-                          {creator.walletAddress.slice(0, 6)}...{creator.walletAddress.slice(-4)}
-                        </p>
-                      </div>
-                      <div className="bg-black/60 px-4 py-2 rounded-full border border-white/10">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-bold">
-                          {ethers.formatEther(creator.totalTips)} ETH
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-gray-300 mb-6">{creator.description}</p>
-                    <div className="space-y-3">
-                      <input
-                        type="number"
-                        step="0.001"
-                        placeholder="Amount in ETH"
-                        className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                        onChange={(e) => setTipAmount(e.target.value)}
-                      />
-                      <motion.button
-                        onClick={() => sendTip(creator.walletAddress, tipAmount)}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg font-medium text-white shadow-lg shadow-purple-500/30"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        Support Creator
-                      </motion.button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            <HoverEffect
+              items={getCreatorCards()}
+              render={(item) => (
+                <CreatorCard 
+                  item={item} 
+                  onTip={(address, amount) => sendTip(address, amount)}
+                />
+              )}
+            />
           )}
         </section>
       </main>
