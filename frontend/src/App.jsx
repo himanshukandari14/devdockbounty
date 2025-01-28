@@ -3,6 +3,7 @@ import { ethers } from 'ethers'
 import { motion, AnimatePresence } from 'framer-motion'
 import devdocLogo from './assets/logo.png'
 import { HoverEffect } from "./components/ui/card-hover-effect";
+import History from './components/History';
 
 function App() {
   const [creatorName, setCreatorName] = useState('')
@@ -16,6 +17,7 @@ function App() {
   const [aiSuggestion, setAiSuggestion] = useState('')
   const [showTutorial, setShowTutorial] = useState(false)
   const [showExtensionPromo, setShowExtensionPromo] = useState(true)
+  const [activeTab, setActiveTab] = useState('main')
 
   const connectWallet = async () => {
     try {
@@ -696,110 +698,174 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-6 space-y-12">
-        {/* Hero Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
+      {/* Navigation Tabs */}
+      <div className="max-w-6xl mx-auto px-6 mt-6">
+        <motion.div 
+          className="flex space-x-4 border-b border-white/10"
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16 space-y-6"
         >
-          <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-            Support Your Favorite Creators
-          </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            Join the future of creator economy. Direct support with cryptocurrency, 
-            no middlemen, instant payments.
-          </p>
-        </motion.section>
-
-        {/* Creator Registration */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative group"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-          <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-8 border border-white/10">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                Become a Creator
-              </h2>
-              <button
-                onClick={generateAISuggestion}
-                className="text-sm bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors flex items-center gap-2"
-              >
-                <span className="animate-pulse">✨</span>
-                AI Suggest
-              </button>
-            </div>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Creator Name"
-                className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                value={creatorName}
-                onChange={(e) => setCreatorName(e.target.value)}
+          <button
+            onClick={() => setActiveTab('main')}
+            className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+              activeTab === 'main'
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <span>Creators</span>
+            {activeTab === 'main' && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
+                initial={false}
               />
-              <div className="relative">
-                <textarea
-                  placeholder="Share your story..."
-                  className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 min-h-[120px]"
-                  value={creatorDescription || aiSuggestion}
-                  onChange={(e) => setCreatorDescription(e.target.value)}
-                />
-                {aiSuggestion && (
-                  <div className="absolute bottom-2 right-2">
-                    <span className="text-xs text-gray-500">AI Generated ✨</span>
-                  </div>
-                )}
-              </div>
-              <motion.button
-                onClick={registerAsCreator}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-medium text-white shadow-lg shadow-purple-500/30"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Start Your Creator Journey
-              </motion.button>
-            </div>
-          </div>
-        </motion.section>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+              activeTab === 'history'
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <span>History</span>
+            {activeTab === 'history' && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
+                initial={false}
+              />
+            )}
+          </button>
+        </motion.div>
+      </div>
 
-        {/* Updated Creators List */}
-        <section className="max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 mb-8">
-            Featured Creators
-          </h2>
-          
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full border-t-2 border-purple-500 animate-spin" />
-                <div className="absolute inset-2 rounded-full border-t-2 border-pink-500 animate-spin-slow" />
-              </div>
-            </div>
-          ) : creators.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20 bg-black/40 backdrop-blur-xl rounded-xl border border-white/10"
-            >
-              <p className="text-gray-400 text-lg">Be the first creator to join our platform!</p>
-            </motion.div>
-          ) : (
-            <HoverEffect
-              items={getCreatorCards()}
-              render={(item) => (
-                <CreatorCard 
-                  item={item} 
-                  onTip={(address, amount) => sendTip(address, amount)}
-                />
-              )}
-            />
-          )}
-        </section>
-      </main>
+      {/* Main Content */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'main' ? (
+          <motion.div
+            key="main"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <main className="max-w-6xl mx-auto p-6 space-y-12">
+              {/* Hero Section */}
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-16 space-y-6"
+              >
+                <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+                  Support Your Favorite Creators
+                </h2>
+                <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+                  Join the future of creator economy. Direct support with cryptocurrency, 
+                  no middlemen, instant payments.
+                </p>
+              </motion.section>
+
+              {/* Creator Registration */}
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-pink-800/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                <div className="relative bg-black/40 backdrop-blur-xl rounded-xl p-8 border border-white/10">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                      Become a Creator
+                    </h2>
+                    <button
+                      onClick={generateAISuggestion}
+                      className="text-sm bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors flex items-center gap-2"
+                    >
+                      <span className="animate-pulse">✨</span>
+                      AI Suggest
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      placeholder="Creator Name"
+                      className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                      value={creatorName}
+                      onChange={(e) => setCreatorName(e.target.value)}
+                    />
+                    <div className="relative">
+                      <textarea
+                        placeholder="Share your story..."
+                        className="w-full bg-black/50 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 min-h-[120px]"
+                        value={creatorDescription || aiSuggestion}
+                        onChange={(e) => setCreatorDescription(e.target.value)}
+                      />
+                      {aiSuggestion && (
+                        <div className="absolute bottom-2 right-2">
+                          <span className="text-xs text-gray-500">AI Generated ✨</span>
+                        </div>
+                      )}
+                    </div>
+                    <motion.button
+                      onClick={registerAsCreator}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-medium text-white shadow-lg shadow-purple-500/30"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Start Your Creator Journey
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* Updated Creators List */}
+              <section className="max-w-6xl mx-auto px-6">
+                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 mb-8">
+                  Featured Creators
+                </h2>
+                
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="relative w-16 h-16">
+                      <div className="absolute inset-0 rounded-full border-t-2 border-purple-500 animate-spin" />
+                      <div className="absolute inset-2 rounded-full border-t-2 border-pink-500 animate-spin-slow" />
+                    </div>
+                  </div>
+                ) : creators.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-20 bg-black/40 backdrop-blur-xl rounded-xl border border-white/10"
+                  >
+                    <p className="text-gray-400 text-lg">Be the first creator to join our platform!</p>
+                  </motion.div>
+                ) : (
+                  <HoverEffect
+                    items={getCreatorCards()}
+                    render={(item) => (
+                      <CreatorCard 
+                        item={item} 
+                        onTip={(address, amount) => sendTip(address, amount)}
+                      />
+                    )}
+                  />
+                )}
+              </section>
+            </main>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <History contract={contract} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Documentation Modal */}
       <DocModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
